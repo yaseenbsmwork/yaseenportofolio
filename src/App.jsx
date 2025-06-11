@@ -5,7 +5,11 @@ import './App.css'
 import AppRoutes from './routes/approutes'
 
 function App() {
-  return <AppRoutes />
+  return (
+    <div className="min-h-screen bg-background w-full">
+      <AppRoutes />
+    </div>
+  )
 }
 
 export default App;
