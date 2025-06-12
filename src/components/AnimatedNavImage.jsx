@@ -78,13 +78,14 @@ const AnimatedNavImage = ({ text = 'WELCOME', png = humanDefault, bg = bgDefault
             style={{
               fontSize: dynamicFontSize, // Apply dynamic font size here
               fontWeight: 900,
-              color: '#ffe600',
-              textShadow: '2px 2px 8px rgba(0,0,0,0.18)',
+              color: '#000000',
+              
+              // textShadow: '2px 2px 8px rgba(0,0,0,0.18)',
               opacity: 0.92,
               lineHeight: 1,
               margin: 0,
               letterSpacing: '0.04em',
-              WebkitTextStroke: '2px #ffe600',
+              // WebkitTextStroke: '2px #ffe600',
               userSelect: 'none',
             }}
           >

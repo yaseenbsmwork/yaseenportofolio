@@ -23,7 +23,7 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col w-full ">
+    <div className="min-h-screen flex flex-col w-full bg-black">
       {showSplash && <Splash onFinish={() => setShowSplash(false)} />}
       {!showSplash && (
         <>
