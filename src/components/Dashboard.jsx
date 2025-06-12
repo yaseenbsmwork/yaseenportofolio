@@ -8,6 +8,7 @@ import welcome from '../assets/welcome.jpg';
 import projects from '../assets/projects.jpg';
 import aboutVideo from '../assets/about.MOV';
 import bg from '../assets/bg3.jpeg';
+import mass from '../assets/mass.PNG';
 
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -151,6 +152,44 @@ const Dashboard = () => {
     };
   }, [activeIndex, navigate]);
 
+  // Add this useEffect for the animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes scrollText {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(-100%);
+        }
+      }
+      @keyframes scrollTextReverse {
+        0% {
+          transform: translateY(-100%);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+      .animate-scroll-text {
+        animation: scrollText 8s linear infinite;
+      }
+      .animate-scroll-text-reverse {
+        animation: scrollTextReverse 8s linear infinite;
+      }
+      .animate-scroll-text span,
+      .animate-scroll-text-reverse span {
+        display: inline-block;
+        padding: 0 10px;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Render the correct page content
   const renderPage = () => {
     switch (activeIndex) {
@@ -271,14 +310,29 @@ const Dashboard = () => {
             textOrientation: 'mixed',
             transform: 'rotate(180deg) translateY(50%)',
             opacity: 0.7,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            height: '100vh',
+            overflow: 'hidden'
           }}
         >
-          <div className="flex items-center space-y-4">
-            <span className="text-2xl font-bold text-gray-600 tracking-widest">
-              {activeIndex === 0 ? 'SCROLL TO WELCOME' : 'SCROLL'}
-            </span>
+          <div className="flex flex-col items-center h-full gap-4">
+            <div className="animate-scroll-text whitespace-nowrap h-1/2 flex items-center">
+              <span className="text-2xl font-bold text-gray-600 tracking-widest inline-block">
+                SCROLL SCROLL SCROLL SCROLL SCROLL SCROLL
+              </span>
+              <span className="text-2xl font-bold text-gray-600 tracking-widest inline-block">
+                SCROLL SCROLL SCROLL SCROLL SCROLL SCROLL
+              </span>
+            </div>
             <div className="w-0.5 h-16 bg-gray-600 mx-auto animate-pulse"></div>
+            <div className="animate-scroll-text-reverse whitespace-nowrap h-1/2 flex items-center">
+              <span className="text-2xl font-bold text-gray-600 tracking-widest inline-block">
+                SCROLL SCROLL SCROLL SCROLL SCROLL SCROLL
+              </span>
+              <span className="text-2xl font-bold text-gray-600 tracking-widest inline-block">
+                SCROLL SCROLL SCROLL SCROLL SCROLL SCROLL
+              </span>
+            </div>
           </div>
         </div>
 
@@ -305,6 +359,15 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Mass Image */}
+        <div className="h-screen flex items-end justify-center" style={{ width: '40vw' }}>
+          <img 
+            src={mass} 
+            alt="Mass" 
+            className="h-full object-contain object-bottom"
+          />
         </div>
 
         {/* Right: Show page content here */}
