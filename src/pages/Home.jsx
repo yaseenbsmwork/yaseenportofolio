@@ -147,11 +147,11 @@ const Home = () => {
   return (
     <div className="w-full h-screen overflow-hidden">
       {/* Navigation indicator */}
-      <div className="fixed top-4 left-4 z-50 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2">
+      {/* <div className="fixed top-4 left-4 z-50 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2">
         <span className="text-white text-sm font-medium">
           Scroll down, then scroll up to return to Dashboard
         </span>
-      </div>
+      </div> */}
 
       <div 
         ref={containerRef}
@@ -176,7 +176,7 @@ const Home = () => {
             width: '100vw'
           }}
         >
-          <h1 className="text-[20vw] font-bold text-gray-900 leading-none">Hey</h1>
+          <h1 className="text-[20vw] font-bold text-white leading-none">Hey</h1>
           
           {/* Scroll indicator for Hey section */}
           <div className="absolute bottom-8 left-16 flex flex-col items-center space-y-2">
@@ -194,7 +194,7 @@ const Home = () => {
             width: '100vw'
           }}
         >
-          <h2 className="text-[20vw] font-bold text-gray-800 leading-none">
+          <h2 className="text-[20vw] font-bold text-white leading-none">
             I'm
           </h2>
         </div>
@@ -208,10 +208,10 @@ const Home = () => {
             width: '100vw'
           }}
         >
-          <h2 className="text-[20vw] font-bold text-gray-800 leading-none">
+          <h2 className="text-[20vw] font-bold text-white leading-none">
             Yaseen
           </h2>
-          <h2 className="text-[20vw] font-bold text-gray-800 leading-none">
+          <h2 className="text-[20vw] font-bold text-white leading-none">
             BSM
           </h2>
         </div>
@@ -225,8 +225,8 @@ const Home = () => {
             width: '100vw'
           }}
         >
-          <p className="text-3xl text-gray-600 max-w-5xl leading-relaxed text-center">
-            I am Yaseen B Muhammed, a full-stack developer from Trivandrum, Kerala, where creativity meets logic in my work. With a lifelong passion for design, I bring imagination to the front end, crafting visual experiences, while my drive for problem-solving fuels my back-end development. I find purpose in bridging these worlds, creating seamless, meaningful connections between technology and human experience.
+          <p className="text-3xl text-gray-300 italic max-w-5xl leading-relaxed text-center">
+            "I am Yaseen B Muhammed, a full-stack developer from Trivandrum, Kerala, where creativity meets logic in my work. With a lifelong passion for design, I bring imagination to the front end, crafting visual experiences, while my drive for problem-solving fuels my back-end development. I find purpose in bridging these worlds, creating seamless, meaningful connections between technology and human experience."
           </p>
         </div>
       </div>

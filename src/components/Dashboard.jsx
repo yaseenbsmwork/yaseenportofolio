@@ -259,9 +259,8 @@ const Dashboard = () => {
   return (
     <div 
       ref={containerRef}
-      className="w-full min-h-screen fixed top-0 left-0 flex flex-col overflow-x-auto overflow-y-hidden bg-black"
+      className="w-full min-h-screen fixed top-0 left-0 flex flex-col overflow-x-auto overflow-y-hidden bg-black cursor-none"
       style={{
-        
         position: 'fixed',
         top: 0,
         left: 0,
@@ -303,7 +302,7 @@ const Dashboard = () => {
       {/* Main content container */}
       <div className="flex flex-row w-[200vw] flex-1 pt-16 relative" style={{ zIndex: 2 }}>
         {/* Scroll indicator */}
-        <div 
+        {/* <div 
           className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50"
           style={{
             writingMode: 'vertical-lr',
@@ -334,7 +333,7 @@ const Dashboard = () => {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Left section with number, images, and nav */}
         <div className="flex flex-row items-start" style={{ width: '60vw', height: '100vh' }}>
@@ -347,7 +346,7 @@ const Dashboard = () => {
               {navItems.map((item, idx) => (
                 <div
                   key={item}
-                  className={`text-7xl font-extrabold cursor-pointer flex items-center transition-colors duration-300 ${activeIndex === idx ? 'text-white' : 'text-white opacity-50'}`}
+                  className={`text-7xl font-extrabold cursor-none flex items-center transition-colors duration-300 ${activeIndex === idx ? 'text-white' : 'text-white opacity-50'}`}
                   style={{ minHeight: 80 }}
                   onClick={() => setActiveIndex(idx)}
                 >
