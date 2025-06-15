@@ -348,7 +348,11 @@ const Dashboard = () => {
                   key={item}
                   className={`text-7xl font-extrabold cursor-none flex items-center transition-colors duration-300 ${activeIndex === idx ? 'text-white' : 'text-white opacity-50'}`}
                   style={{ minHeight: 80 }}
-                  onClick={() => setActiveIndex(idx)}
+                  onClick={() => {
+                    setActiveIndex(idx);
+                    const routes = ['/home', '/projects', '/about', '/experience', '/skills', '/contact'];
+                    navigate(routes[idx]);
+                  }}
                 >
                   <span className={`mr-6 transition-transform duration-300 flex items-center ${activeIndex === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} style={{width: 40, height: 40}}>
                     {activeIndex === idx ? <PawPrint size={40} color="#fff" /> : null}
