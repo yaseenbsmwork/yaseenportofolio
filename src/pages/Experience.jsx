@@ -1,478 +1,322 @@
-import React, { useRef, useState, useEffect, forwardRef, createContext, useContext } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, Environment, useAnimations, useTexture, Text } from '@react-three/drei';
+import { Environment, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Create the SceneContentContext
-const SceneContentContext = createContext(null);
+gsap.registerPlugin(ScrollTrigger);
 
-// Character component with the provided model and textures
-const Character = forwardRef(({ position, rotation, isWalking, currentRotationSpeed }, ref) => {
-  // Road boundaries
-  const ROAD_WIDTH = 10;
-  const ROAD_BOUNDARY = ROAD_WIDTH / 2;
-  
-  // Load the character model from the correct path
-  const { scene, animations } = useGLTF('/src/assets/source/684c0f35-ba0b-48e0-ab19-db572ea748d3.glb');
-  
-  // Load textures
-  const textures = useTexture({
-    body: '/src/assets/textures/body_texture_2.jpeg',
-    face: '/src/assets/textures/face_texture_5.jpeg',
-    hair: '/src/assets/textures/hair-23-N_3.png',
-    teeth: '/src/assets/textures/Wolf3D_Teeth_15.jpeg',
-    outfitTop: '/src/assets/textures/outfit-classic-04-v2-m-top-N_12.jpeg',
-    outfitBottom: '/src/assets/textures/outfit-classic-04-v2-m-bottom-N_6.jpeg',
-    footwear: '/src/assets/textures/outfit-classic-04-v2-m-footwear-N_9.jpeg'
+const experiencesData = [
+  {
+    id: 'title',
+    position: [0, 1.5, 12],
+    title: 'Experience',
+    subtitle: 'Scroll to explore',
+    date: '',
+    isTitle: true,
+  },
+  {
+    id: 'docme',
+    position: [0, 1.2, 0],
+    title: 'Software Developer',
+    subtitle: 'DocMe Cloud Solutions, Trivandrum',
+    date: 'July 2024 – Present',
+    bullets: [
+      'React.js & Next.js interfaces',
+      'Node.js + Express services',
+      'REST APIs + optimized PostgreSQL',
+      'Mentored trainees in JS/React',
+    ],
+  },
+  {
+    id: 'entrykey',
+    position: [0, 1.2, -20],
+    title: 'Software Developer (Part Time)',
+    subtitle: 'Entry Key Business Solutions, Technopark',
+    date: 'Dec 2023 – June 2024',
+    bullets: [
+      'React frontends',
+      'Node.js + Express services',
+      'REST APIs + PostgreSQL',
+    ],
+  },
+  {
+    id: 'intern',
+    position: [0, 1.2, -40],
+    title: 'Internship: Full Stack Java Developer',
+    subtitle: 'Stem Robotic, Trivandrum',
+    date: 'June 2023',
+    bullets: [],
+  },
+  {
+    id: 'freelance',
+    position: [0, 1.2, -60],
+    title: 'Video & Photo Editor',
+    subtitle: 'Freelance / YouTube Channels',
+    date: '2014 – 2024',
+    bullets: [],
+  },
+  {
+    id: 'outro',
+    position: [0, 1.5, -75],
+    title: 'Thanks for visiting!',
+    subtitle: 'Scroll back to explore again',
+    date: '',
+    isOutro: true,
+  },
+];
+
+const Marker = ({ position, glow = 1 }) => {
+  const meshRef = useRef();
+  useFrame(() => {
+    if (meshRef.current) {
+      const t = performance.now() * 0.001;
+      meshRef.current.material.emissiveIntensity = 1.2 + Math.sin(t * 2) * 0.4 * glow;
+      meshRef.current.scale.setScalar(1 + Math.sin(t * 1.5) * 0.05);
+    }
   });
-
-  // Apply textures to the model
-  useEffect(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child.isMesh) {
-          // Apply textures based on mesh name or material name
-          if (child.material.name.includes('body')) {
-            child.material.map = textures.body;
-          } else if (child.material.name.includes('face')) {
-            child.material.map = textures.face;
-          } else if (child.material.name.includes('hair')) {
-            child.material.map = textures.hair;
-          } else if (child.material.name.includes('teeth')) {
-            child.material.map = textures.teeth;
-          } else if (child.material.name.includes('top')) {
-            child.material.map = textures.outfitTop;
-          } else if (child.material.name.includes('bottom')) {
-            child.material.map = textures.outfitBottom;
-          } else if (child.material.name.includes('footwear')) {
-            child.material.map = textures.footwear;
-          }
-          
-          // Enable shadows
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
-    }
-  }, [scene, textures]);
-
-  const { actions } = useAnimations(animations, ref);
-
-  useEffect(() => {
-    if (isWalking) {
-      if (actions.walk) actions.walk.play();
-    } else {
-      if (actions.walk) actions.walk.stop();
-    }
-  }, [isWalking, actions]);
-
-  useFrame((state, delta) => {
-    if (ref.current) {
-      // Handle rotation
-      if (currentRotationSpeed !== 0) {
-        ref.current.rotation.y += delta * currentRotationSpeed;
-      }
-    }
-  });
-
   return (
-    <primitive 
-      ref={ref}
-      object={scene} 
-      position={position} 
-      rotation={rotation}
-      scale={[1, 1, 1]}
-    />
-  );
-});
-
-// Building component
-const Building = ({ position, width, height, depth, hasSign, signText, side }) => {
-  const buildingRef = useRef();
-  
-  useEffect(() => {
-    if (buildingRef.current) {
-      // Create a procedural texture for the building
-      const size = 256;
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-
-      // Fill background
-      ctx.fillStyle = '#4a4a4a';
-      ctx.fillRect(0, 0, size, size);
-
-      // Draw windows
-      const windowSize = 20;
-      const windowSpacing = 30;
-      const windowColor = '#88ccff';
-      const windowRows = 8;
-      const windowCols = 4;
-
-      for (let row = 0; row < windowRows; row++) {
-        for (let col = 0; col < windowCols; col++) {
-          const isLit = Math.random() > 0.3;
-          ctx.fillStyle = isLit ? windowColor : '#2a2a2a';
-          
-          const x = col * windowSpacing + 20;
-          const y = row * windowSpacing + 20;
-          ctx.fillRect(x, y, windowSize, windowSize);
-        }
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(1, Math.ceil(height / 20));
-
-      buildingRef.current.material.map = texture;
-      buildingRef.current.material.needsUpdate = true;
-    }
-  }, [height]);
-
-  return (
-    <mesh ref={buildingRef} position={position} castShadow receiveShadow>
-      <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial 
-        color="#4a4a4a"
-        roughness={0.7}
-        metalness={0.2}
-      />
-      {hasSign && (
-        <Text
-          position={[side === 'left' ? width / 2 + 0.1 : -width / 2 - 0.1,-7, 0]}
-          rotation={[0, side === 'left' ? Math.PI / 2 : -Math.PI / 2, 0]}
-          fontSize={1.2}
-          color="white"
-          anchorX="center"
-          anchorY="bottom"
-        >
-          {signText.join('\n')}
-        </Text>
-      )}
+    <mesh ref={meshRef} position={position} castShadow>
+      <sphereGeometry args={[0.35, 32, 32]} />
+      <meshStandardMaterial color="#65a8ff" emissive="#65a8ff" emissiveIntensity={1.2} roughness={0.3} metalness={0.1} />
     </mesh>
   );
 };
 
-// Road component with buildings
-const Road = ({ ROAD_WIDTH, hiddenTextKeys }) => {
-  const roadRef = useRef();
-
-  // Generate buildings along the road
-  const generateBuildings = () => {
-    const buildings = [];
-    const buildingSpacing = 15;
-    const numBuildings = 5;
-
-    // Left side buildings
-    for (let i = 0; i < numBuildings; i++) {
-      const height = Math.random() * 10 + 10;
-      let hasSign = false;
-      let signText = [];
-      let side = "left";
-
-      buildings.push(
-        <Building
-          key={`left-${i}`}
-          position={[-12, height/2, i * buildingSpacing - 30]}
-          width={8}
-          height={height}
-          depth={8}
-          hasSign={hasSign}
-          signText={signText}
-          side={side}
-        />
-      );
-    }
-
-    // Right side buildings
-    for (let i = 0; i < numBuildings; i++) {
-      const height = Math.random() * 10 + 10;
-      buildings.push(
-        <Building
-          key={`right-${i}`}
-          position={[12, height/2, i * buildingSpacing - 30]}
-          width={8}
-          height={height}
-          depth={8}
-          hasSign={false}
-          signText={[]}
-          side="right"
-        />
-      );
-    }
-
-    // Add the end building
-    buildings.push(
-      <mesh key="end-building" position={[0, 15, -40]} castShadow receiveShadow>
-        <boxGeometry args={[20, 30, 20]} />
-        <meshStandardMaterial 
-          color="white"
-          roughness={0.3}
-          metalness={0.1}
-        />
-        {/* Add black windows */}
-        <mesh position={[0, 0, 10.01]}>
-          <planeGeometry args={[18, 28]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-        <mesh position={[0, 0, -10.01]}>
-          <planeGeometry args={[18, 28]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-        <mesh position={[10.01, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <planeGeometry args={[20, 28]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-        <mesh position={[-10.01, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <planeGeometry args={[20, 28]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
+const Panel = React.forwardRef(function Panel({ position, title, subtitle, date, bullets, center = false, large = false }, ref) {
+  return (
+    <group position={position}>
+      <mesh>
+        <planeGeometry args={[large ? 8 : 6, large ? 3.6 : 3]} />
+        <meshStandardMaterial color="#0c0f14" transparent opacity={0.75} />
       </mesh>
+      <group ref={ref} position={[0, 0, 0.02]}>
+        <Text fontSize={large ? 0.5 : 0.44} color="white" anchorX={center ? 'center' : 'left'} anchorY="top" position={[center ? 0 : -((large ? 8 : 6) / 2) + 0.6, (large ? 3.6 : 3) / 2 - 0.5, 0]}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text fontSize={large ? 0.32 : 0.28} color="#b9c7ff" anchorX={center ? 'center' : 'left'} anchorY="top" position={[center ? 0 : -((large ? 8 : 6) / 2) + 0.6, (large ? 3.6 : 3) / 2 - 1.1, 0]}>
+            {subtitle}
+          </Text>
+        ) : null}
+        {date ? (
+          <Text fontSize={large ? 0.28 : 0.26} color="#9fb0ff" anchorX={center ? 'center' : 'left'} anchorY="top" position={[center ? 0 : -((large ? 8 : 6) / 2) + 0.6, (large ? 3.6 : 3) / 2 - 1.6, 0]}>
+            {date}
+          </Text>
+        ) : null}
+        {bullets && bullets.length > 0 ? (
+          <group>
+            {bullets.map((b, i) => (
+              <Text key={i} fontSize={0.24} color="#d7defa" anchorX="left" anchorY="top" position={[-(large ? 8 : 6) / 2 + 0.6, (large ? 3.6 : 3) / 2 - 2.2 - i * 0.5, 0]}>
+                • {b}
+              </Text>
+            ))}
+          </group>
+        ) : null}
+      </group>
+    </group>
+  );
+});
+
+const TimelineScene = ({ container }) => {
+  const { camera, gl, size } = useThree();
+  const panelsRefs = useRef([]);
+  const containerRef = useRef(null);
+
+  const nodes = useMemo(() => experiencesData, []);
+
+  useEffect(() => {
+    // initial camera setup
+    camera.position.set(0, 2.2, 14);
+    camera.lookAt(0, 1.2, 0);
+
+    // create a proxy object for camera to allow gsap smooth tween
+    const camProxy = { x: camera.position.x, y: camera.position.y, z: camera.position.z, lookZ: 0 };
+
+    const sectionLen = nodes.length - 1; // we animate from title to outro
+    const totalDistance = Math.abs(nodes[0].position[2] - nodes[nodes.length - 1].position[2]);
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: container?.current || gl.domElement.parentElement,
+        start: 'top top',
+        end: () => `+=${Math.max(nodes.length * 1200, size.height * (sectionLen + 2))}`,
+        pin: container?.current || gl.domElement.parentElement,
+        scrub: 1.2,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    // Animate camera along Z through each node, with slight lateral drift for parallax
+    nodes.forEach((node, index) => {
+      if (index === 0) return; // skip title as starting point
+      const prev = nodes[index - 1];
+      const targetZ = node.position[2] + 4; // stop a bit before the panel
+      const driftX = (index % 2 === 0 ? -0.6 : 0.6);
+      const dur = Math.abs(prev.position[2] - node.position[2]) / totalDistance * 4; // normalized segment duration
+
+      tl.to(
+        camProxy,
+        {
+          x: driftX,
+          y: 2.1,
+          z: targetZ,
+          lookZ: node.position[2],
+          duration: Math.max(0.6, dur),
+          onUpdate: () => {
+            camera.position.set(camProxy.x, camProxy.y, camProxy.z);
+            camera.lookAt(0, 1.2, camProxy.lookZ);
+          },
+        },
+        '>'
+      );
+
+      // opacity in for current panel
+      tl.to(
+        panelsRefs.current[index]?.children?.[0]?.material || {},
+        { opacity: 0.92, duration: 0.4 },
+        '<0.05'
+      );
+      tl.fromTo(
+        panelsRefs.current[index],
+        { alpha: 0 },
+        { alpha: 1, duration: 0.6 },
+        '<'
+      );
+      // fade out previous panel slightly later
+      if (index - 1 >= 0) {
+        tl.to(
+          panelsRefs.current[index - 1]?.children?.[0]?.material || {},
+          { opacity: 0.75, duration: 0.3 },
+          '>'
+        );
+      }
+    });
+
+    // outro: a small zoom out
+    tl.to(
+      camera.position,
+      {
+        x: 0,
+        y: 2.8,
+        z: nodes[nodes.length - 1].position[2] + 6,
+        duration: 0.8,
+        onUpdate: () => {
+          camera.lookAt(0, 1.5, nodes[nodes.length - 1].position[2]);
+        },
+      },
+      '>'
     );
 
-    return buildings;
-  };
+    // ensure proper sizing after layout changes
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+
+    return () => {
+      tl.scrollTrigger && tl.scrollTrigger.kill();
+      tl.kill();
+      ScrollTrigger.clearMatchMedia();
+    };
+  }, [camera, gl.domElement, size.height, nodes, container]);
+
+  // subtle background moving light
+  const movingLight = useRef();
+  useFrame(({ clock }) => {
+    if (movingLight.current) {
+      const t = clock.getElapsedTime() * 0.25;
+      movingLight.current.position.x = Math.sin(t) * 5;
+      movingLight.current.position.z = -20 + Math.cos(t) * 10;
+    }
+  });
 
   return (
     <group>
-      {/* Road segment */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[ROAD_WIDTH, 100]} />
-        <meshStandardMaterial color="#3a3a3a" />
+      <color attach="background" args={["#06080f"]} />
+      <ambientLight intensity={0.45} />
+      <directionalLight position={[3, 6, 6]} intensity={0.5} castShadow />
+      <pointLight ref={movingLight} position={[0, 3, -20]} intensity={0.9} color="#88aaff" distance={40} decay={2} />
+      <Environment preset="city" />
+
+      {/* timeline axis */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0, -30]} receiveShadow>
+        <planeGeometry args={[0.1, 120]} />
+        <meshStandardMaterial color="#2b3350" />
       </mesh>
 
-      {/* Road markings */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]}>
-        <planeGeometry args={[0.5, 100]} />
-        <meshStandardMaterial color="white" />
-      </mesh>
+      {nodes.map((n, i) => (
+        <group key={n.id}>
+          <Marker position={[n.position[0], 0.6, n.position[2]]} />
+          {n.isTitle ? (
+            <Panel ref={(el) => (panelsRefs.current[i] = el)} position={[n.position[0], n.position[1], n.position[2]]} title={n.title} subtitle={n.subtitle} date={n.date} bullets={[]} center large />
+          ) : n.isOutro ? (
+            <Panel ref={(el) => (panelsRefs.current[i] = el)} position={[n.position[0], n.position[1], n.position[2]]} title={n.title} subtitle={n.subtitle} date={n.date} bullets={[]} center large />
+          ) : (
+            <Panel ref={(el) => (panelsRefs.current[i] = el)} position={[n.position[0], n.position[1], n.position[2]]} title={n.title} subtitle={n.subtitle} date={n.date} bullets={n.bullets} />
+          )}
+        </group>
+      ))}
 
-      {/* Freelance Text on the road */}
-      {/* {!hiddenTextKeys.includes('freelance-text') && (
-        <Text
-          position={[0, 0.02, -35]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          fontSize={1.5}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {"Freelance\n2014-2023\nVideo Editing"}
-        </Text>
-      )} */}
-
-      {/* STEM Robotics Text on the road */}
-      {/* {!hiddenTextKeys.includes('stem-robotics-text') && (
-        <Text
-          position={[0, 0.02, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          fontSize={1.5}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {"STEM Robotics\n2023\nInternship"}
-        </Text>
-      )} */}
-
-      {/* Buildings */}
-      {generateBuildings()}
+      {/* gentle floating dust (instanced) */}
+      <FloatingDust count={120} area={[8, 4, 90]} />
     </group>
   );
 };
 
-const SceneContent = () => {
-  const characterRef = useRef();
-  const worldRef = useRef();
-  const { camera } = useThree();
-
-  const [isWalking, setIsWalking] = useState(false);
-  const [rotationSpeed, setRotationSpeed] = useState(0);
-  const [showPopover, setShowPopover] = useState(false);
-  const [popoverContent, setPopoverContent] = useState("");
-  const [hiddenTextKeys, setHiddenTextKeys] = useState([]);
-
-  const ROAD_WIDTH = 10;
-  const ROAD_BOUNDARY = ROAD_WIDTH / 2;
-  const MOVEMENT_SPEED = 5;
-  const CHARACTER_ROTATION_SPEED = 2.5;
-  const MAX_WORLD_Z_OFFSET = -40;
-
-  // Define text trigger points and content
-  const textTriggers = [
-    {
-      key: 'freelance-text',
-      localZ: -35,
-      content: "Freelance\n2014-2023\nVideo Editing",
-    },
-    {
-      key: 'stem-robotics-text',
-      localZ: 0,
-      content: "STEM Robotics\n2023\nInternship",
-    },
-  ];
+const FloatingDust = ({ count = 100, area = [6, 3, 60] }) => {
+  const meshRef = useRef();
+  const [ax, ay, az] = area;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const positions = useMemo(() => {
+    return new Array(count).fill(0).map(() => ({
+      x: (Math.random() - 0.5) * ax,
+      y: Math.random() * ay + 0.2,
+      z: -Math.random() * az,
+      s: Math.random() * 0.6 + 0.2,
+      r: Math.random() * Math.PI * 2,
+      spd: Math.random() * 0.15 + 0.02,
+    }));
+  }, [count, ax, ay, az]);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      switch (e.key) {
-        case 'ArrowUp':
-          setIsWalking(true);
-          break;
-        case 'ArrowLeft':
-          setRotationSpeed(CHARACTER_ROTATION_SPEED);
-          break;
-        case 'ArrowRight':
-          setRotationSpeed(-CHARACTER_ROTATION_SPEED);
-          break;
-      }
-    };
-
-    const handleKeyUp = (e) => {
-      switch (e.key) {
-        case 'ArrowUp':
-          setIsWalking(false);
-          break;
-        case 'ArrowLeft':
-        case 'ArrowRight':
-          setRotationSpeed(0);
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  useFrame((state, delta) => {
-    if (!characterRef.current || !worldRef.current) return;
-
-    const currentRotation = characterRef.current.rotation.y;
-
-    if (rotationSpeed !== 0) {
-      characterRef.current.rotation.y += rotationSpeed * delta;
-    }
-
-    if (isWalking) {
-      const worldMovement = new THREE.Vector3(
-        -Math.sin(currentRotation) * MOVEMENT_SPEED * delta,
-        0,
-        -Math.cos(currentRotation) * MOVEMENT_SPEED * delta
-      );
-
-      const newWorldPosition = worldRef.current.position.clone().add(worldMovement);
-
-      if (newWorldPosition.z >= MAX_WORLD_Z_OFFSET) {
-        worldRef.current.position.copy(newWorldPosition);
-      } else {
-        worldRef.current.position.z = MAX_WORLD_Z_OFFSET;
-      }
-    }
-
-    // Update camera position to follow character with more distance
-    const cameraOffset = new THREE.Vector3(
-      -Math.sin(currentRotation) * 8, // Reduced distance from 12 to 8
-      5, // Reduced height from 8 to 5
-      -Math.cos(currentRotation) * 8 // Reduced distance from 12 to 8
-    );
-    camera.position.copy(characterRef.current.position).add(cameraOffset);
-    camera.lookAt(characterRef.current.position);
-
-    // Popover trigger logic
-    textTriggers.forEach((trigger) => {
-      const worldZPosition = worldRef.current.position.z + trigger.localZ;
-      if (worldZPosition > -5 && worldZPosition < 5 && !hiddenTextKeys.includes(trigger.key)) {
-        setPopoverContent(trigger.content);
-        setShowPopover(true);
-        setHiddenTextKeys((prev) => [...prev, trigger.key]);
-
-        setTimeout(() => {
-          setShowPopover(false);
-          setPopoverContent("");
-        }, 5000);
-      }
+    positions.forEach((p, i) => {
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.setScalar(p.s);
+      dummy.rotation.set(0, 0, p.r);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
     });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  }, [positions, dummy]);
+
+  useFrame(() => {
+    positions.forEach((p, i) => {
+      p.y += Math.sin(performance.now() * 0.001 + p.r) * 0.002;
+      p.x += Math.cos(performance.now() * 0.0015 + p.r) * 0.0015;
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
   return (
-    <SceneContentContext.Provider value={{ showPopover, popoverContent }}>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} castShadow />
-      <Environment preset="city" />
-
-      <group ref={worldRef}>
-        <Road ROAD_WIDTH={ROAD_WIDTH} hiddenTextKeys={hiddenTextKeys} />
-      </group>
-
-      <Character 
-        ref={characterRef} 
-        position={[0, 0, 0]} 
-        rotation={[0, Math.PI, 0]} 
-        isWalking={isWalking} 
-        currentRotationSpeed={rotationSpeed} 
-      />
-    </SceneContentContext.Provider>
+    <instancedMesh ref={meshRef} args={[null, null, count]}>
+      <sphereGeometry args={[0.03, 8, 8]} />
+      <meshBasicMaterial color="#9fb0ff" transparent opacity={0.35} />
+    </instancedMesh>
   );
 };
 
-// Error boundary component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error in Canvas:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong. Please refresh the page.</div>;
-    }
-    return this.props.children;
-  }
-}
-
 const Experience = () => {
+  const containerRef = useRef(null);
   return (
-    <div className="w-full h-screen">
-      <ErrorBoundary>
-        <Canvas
-          shadows
-          camera={{ position: [0, 5, 8], fov: 75 }}
-          gl={{ preserveDrawingBuffer: true }}
-        >
-          <SceneContent />
-        </Canvas>
-      </ErrorBoundary>
-      <div className="absolute top-4 left-4 text-white bg-black bg-opacity-50 p-4 rounded">
-        <h2 className="text-xl font-bold mb-2">Controls</h2>
-        <p className="mb-1">↑ - Walk forward</p>
-        <p className="mb-1">← - Rotate left</p>
-        <p>→ - Rotate right</p>
-      </div>
-      {/* Popover for displaying text content */}
-      <SceneContentContext.Consumer>
-        {(context) => context?.showPopover && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-80 text-white p-6 rounded-lg text-center">
-            <div className="text-lg whitespace-pre-line">
-              {context.popoverContent}
-            </div>
-          </div>
-        )}
-      </SceneContentContext.Consumer>
-    </div>
+    <section ref={containerRef} className="w-full h-screen" style={{ position: 'relative' }}>
+      <Canvas shadows gl={{ antialias: true, alpha: true }} camera={{ position: [0, 2.2, 14], fov: 60 }}>
+        <TimelineScene container={containerRef} />
+      </Canvas>
+    </section>
   );
 };
 
